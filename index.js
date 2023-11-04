@@ -43,6 +43,34 @@ app.get("/", (req, res) => {
   res.send("server is running...");
 });
 
+// jwt auth apis route
+app.post("/jwt", (req, res) => {
+  const user = req.body;
+  console.log("user of token email", user);
+
+  // create token
+  const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRECT, {
+    expiresIn: "24h",
+  });
+
+  // store token
+  res
+    .cookie("token", token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    })
+    .send({ success: true });
+});
+
+app.post("/logout", (req, res) => {
+  //get user
+  const user = req.body;
+  console.log("logout user =", user);
+  //clean cookie in client
+  res.clearCookie("token", { maxAge: 0 }).send({ success: true });
+});
+
 app.listen(port, () => {
   console.log(`server is running successfully at http://${port}`);
 });
