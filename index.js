@@ -17,6 +17,29 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+// middlewares
+const logger = (req, res, next) => {
+  console.log("mylogger = ", req.host, req.originalUrl);
+  next();
+};
+
+const verrifyToken = (req, res, next) => {
+  const token = req.cookies?.token;
+
+  if (!token) {
+    return res.satus(401).send({ message: "unauthorized" });
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRECT, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "unauthorized" });
+    }
+
+    console.log("decoded =", decoded);
+    req.user = decoded;
+    next();
+  });
+};
+
 //connect mongodb
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@job-house.p1cwnsp.mongodb.net/?retryWrites=true&w=majority`;
 
