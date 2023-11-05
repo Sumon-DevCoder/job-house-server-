@@ -62,7 +62,7 @@ const dbConnect = async () => {
 dbConnect();
 
 const jobsCollection = client.db("jobHouse").collection("jobs");
-// const jobsCollection = client.db("jobHouse").collection("jobs");
+const reviewCollection = client.db("jobHouse").collection("customerReviews");
 
 // jwt auth apis route
 app.post("/jwt", (req, res) => {
@@ -112,6 +112,13 @@ app.get("/jobs/:category", async (req, res) => {
   const category = req.params.category;
   const query = { category: category };
   const cursor = jobsCollection.find(query);
+  const result = await cursor.toArray();
+  res.send(result);
+});
+
+// reviews apis route
+app.get("/customerReviews", async (req, res) => {
+  const cursor = reviewCollection.find();
   const result = await cursor.toArray();
   res.send(result);
 });
