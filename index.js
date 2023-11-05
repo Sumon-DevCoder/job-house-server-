@@ -4,7 +4,7 @@ const port = process.env.PORT || 5000;
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 
 // middleware
@@ -61,10 +61,8 @@ const dbConnect = async () => {
 };
 dbConnect();
 
-// home apis route
-app.get("/", (req, res) => {
-  res.send("server is running...");
-});
+const jobsCollection = client.db("jobHouse").collection("jobs");
+// const jobsCollection = client.db("jobHouse").collection("jobs");
 
 // jwt auth apis route
 app.post("/jwt", (req, res) => {
@@ -92,6 +90,35 @@ app.post("/logout", (req, res) => {
   console.log("logout user =", user);
   //clean cookie in client
   res.clearCookie("token", { maxAge: 0 }).send({ success: true });
+});
+
+// jobs apis route
+app.get("/jobs", async (req, res) => {
+  const cursor = jobsCollection.find();
+  const result = await cursor.toArray();
+  res.send(result);
+});
+
+app.get("/jobs/:id", async (req, res) => {
+  const id = req.params.id;
+  console.log(id);
+  const query = { _id: new ObjectId(id) };
+  console.log(query);
+  const result = await jobsCollection.findOne(query);
+  console.log(result);
+});
+
+app.get("/jobs/:category", async (req, res) => {
+  const category = req.params.category;
+  const query = { category: category };
+  const cursor = jobsCollection.find(query);
+  const result = await cursor.toArray();
+  res.send(result);
+});
+
+// home apis route
+app.get("/", (req, res) => {
+  res.send("server is running...");
 });
 
 app.listen(port, () => {
