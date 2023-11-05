@@ -63,6 +63,7 @@ dbConnect();
 
 const jobsCollection = client.db("jobHouse").collection("jobs");
 const reviewCollection = client.db("jobHouse").collection("customerReviews");
+const jobAppliesCollection = client.db("jobHouse").collection("jobApplies");
 
 // jwt auth apis route
 app.post("/jwt", (req, res) => {
@@ -99,20 +100,56 @@ app.get("/jobs", async (req, res) => {
   res.send(result);
 });
 
-app.get("/jobs/:id", async (req, res) => {
+app.get("/jobsByEmail", async (req, res) => {
+  let query = {};
+  if (req.query?.email) {
+    query = { email: req.query?.email };
+  }
+  const result = await jobsCollection.find(query).toArray();
+  res.send(result);
+});
+
+app.delete("/jobsByEmail/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await jobsCollection.deleteOne(query);
+  res.send(result);
+});
+
+app.post("/jobs", async (req, res) => {
+  const addJobInfo = req.body;
+  const result = await jobsCollection.insertOne(addJobInfo);
+  res.send(result);
+});
+
+app.get("/jobsById/:id", async (req, res) => {
   const id = req.params.id;
   console.log(id);
   const query = { _id: new ObjectId(id) };
   console.log(query);
   const result = await jobsCollection.findOne(query);
-  console.log(result);
+  res.send(result);
 });
 
-app.get("/jobs/:category", async (req, res) => {
+app.get("/jobByCategory/:category", async (req, res) => {
   const category = req.params.category;
   const query = { category: category };
   const cursor = jobsCollection.find(query);
   const result = await cursor.toArray();
+  res.send(result);
+});
+
+// addJob apis route
+app.post("/jobApplies", async (req, res) => {
+  const jobAppliesInfo = req.body;
+  const result = await jobAppliesCollection.insertOne(jobAppliesInfo);
+  res.send(result);
+});
+
+// jobApplies apis route
+app.post("/jobApplies", async (req, res) => {
+  const jobAppliesInfo = req.body;
+  const result = await jobAppliesCollection.insertOne(jobAppliesInfo);
   res.send(result);
 });
 
