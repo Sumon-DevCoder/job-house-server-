@@ -123,6 +123,30 @@ app.put("/jobsByEmail/:id", async (req, res) => {
   res.send(result);
 });
 
+// udpate myjobs post
+app.put("/jobsById/:id", async (req, res) => {
+  const id = req.params.id;
+  const item = req.body;
+  const filter = { _id: new ObjectId(id) };
+  const updateJobsPost = {
+    $set: {
+      postedBy: item.postedBy,
+      email: item.email,
+      jobTitle: item.jobTitle,
+      category: item.category,
+      description: item.description,
+      imgUrl: item.imgUrl,
+      location: item.location,
+      salaryRange: item.salaryRange,
+      jobPostingDate: item.jobPostingDate,
+      applicationDeadline: item.applicationDeadline,
+      applicantsNumber: item.applicantsNumber,
+    },
+  };
+  const result = await jobsCollection.updateOne(filter, updateJobsPost);
+  res.send(result);
+});
+
 app.post("/jobs", async (req, res) => {
   const addJobInfo = req.body;
   const result = await jobsCollection.insertOne(addJobInfo);
@@ -146,20 +170,31 @@ app.get("/jobByCategory/:category", async (req, res) => {
   res.send(result);
 });
 
-// addJob apis route
-app.post("/jobApplies", async (req, res) => {
-  const jobAppliesInfo = req.body;
-  const result = await jobAppliesCollection.insertOne(jobAppliesInfo);
+app.get("/jobByTitle/:jobTitle", async (req, res) => {
+  const jobTitle = req.params.jobTitle;
+  const query = { jobTitle: jobTitle };
+  const cursor = jobsCollection.find(query);
+  const result = await cursor.toArray();
   res.send(result);
 });
 
 // jobApplies apis route
 app.post("/jobApplies", async (req, res) => {
   const jobAppliesInfo = req.body;
+  console.log("myyyyy", jobAppliesInfo);
   const result = await jobAppliesCollection.insertOne(jobAppliesInfo);
   res.send(result);
 });
 
+app.get("/jobAppliesByEmail/:category", async (req, res) => {
+  const category = req.params.category;
+  const query = { category: category };
+  const cursor = jobAppliesCollection.find(query);
+  const result = await cursor.toArray();
+  res.send(result);
+});
+
+// try
 app.get("/jobAppliesByEmail", async (req, res) => {
   let query = {};
   if (req.query?.email) {
