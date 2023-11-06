@@ -116,6 +116,13 @@ app.delete("/jobsByEmail/:id", async (req, res) => {
   res.send(result);
 });
 
+app.put("/jobsByEmail/:id", async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await jobsCollection.deleteOne(query);
+  res.send(result);
+});
+
 app.post("/jobs", async (req, res) => {
   const addJobInfo = req.body;
   const result = await jobsCollection.insertOne(addJobInfo);
@@ -150,6 +157,15 @@ app.post("/jobApplies", async (req, res) => {
 app.post("/jobApplies", async (req, res) => {
   const jobAppliesInfo = req.body;
   const result = await jobAppliesCollection.insertOne(jobAppliesInfo);
+  res.send(result);
+});
+
+app.get("/jobAppliesByEmail", async (req, res) => {
+  let query = {};
+  if (req.query?.email) {
+    query = { email: req.query?.email };
+  }
+  const result = await jobAppliesCollection.find(query).toArray();
   res.send(result);
 });
 
