@@ -27,11 +27,11 @@ const verrifyToken = (req, res, next) => {
   const token = req.cookies?.token;
 
   if (!token) {
-    return res.satus(401).send({ message: "unauthorized" });
+    return res.status(401).send({ message: "token not found" });
   }
   jwt.verify(token, process.env.ACCESS_TOKEN_SECRECT, (err, decoded) => {
     if (err) {
-      return res.status(401).send({ message: "unauthorized" });
+      return res.status(401).send({ message: "unauthorized user" });
     }
 
     console.log("decoded =", decoded);
@@ -100,7 +100,14 @@ app.get("/jobs", async (req, res) => {
   res.send(result);
 });
 
-app.get("/jobsByEmail", async (req, res) => {
+app.get("/jobsByEmail", logger, verrifyToken, async (req, res) => {
+  console.log("loggedUser = ", req.query?.email);
+  console.log("tokenUser = ", req.user?.email);
+
+  if (req.query?.email !== req.user?.email) {
+    res.status(403).send({ message: "forbidden access" });
+  }
+
   let query = {};
   if (req.query?.email) {
     query = { email: req.query?.email };
@@ -162,6 +169,22 @@ app.get("/jobsById/:id", async (req, res) => {
   res.send(result);
 });
 
+// jobApplicant
+app.patch("/jobApplicant/:id", async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: new ObjectId(id) };
+  const updatedNumber = req.body;
+  console.log("applicantInfo", updatedNumber);
+
+  const updateDoc = {
+    $inc: {
+      quantity: 1,
+    },
+  };
+  const result = await jobsCollection.updateOne(filter, updateDoc);
+  res.send(result);
+});
+
 app.get("/jobByCategory/:category", async (req, res) => {
   const category = req.params.category;
   const query = { category: category };
@@ -194,7 +217,6 @@ app.get("/jobAppliesByEmail/:category", async (req, res) => {
   res.send(result);
 });
 
-// try
 app.get("/jobAppliesByEmail", async (req, res) => {
   let query = {};
   if (req.query?.email) {
