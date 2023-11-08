@@ -1,16 +1,19 @@
 const express = require("express");
-const app = express();
-const port = process.env.PORT || 5000;
+require("dotenv").config();
 const cors = require("cors");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
-const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
-require("dotenv").config();
+const app = express();
+const port = process.env.PORT || 5000;
 
 // middleware
 app.use(
   cors({
-    origin: ["http://localhost:5173"],
+    origin: [
+      "https://job-house-94161.web.app",
+      "https://job-house-94161.firebaseapp.com",
+    ],
     credentials: true,
   })
 );
@@ -62,8 +65,9 @@ const dbConnect = async () => {
 dbConnect();
 
 const jobsCollection = client.db("jobHouse").collection("jobs");
-const reviewCollection = client.db("jobHouse").collection("customerReviews");
 const jobAppliesCollection = client.db("jobHouse").collection("jobApplies");
+const reviewCollection = client.db("jobHouse").collection("customerReviews");
+const usersInfoCollection = client.db("jobHouse").collection("usersInfo");
 
 // jwt auth apis route
 app.post("/jwt", (req, res) => {
@@ -169,20 +173,21 @@ app.get("/jobsById/:id", async (req, res) => {
   res.send(result);
 });
 
-// jobApplicant
+// jobApplicant increment
 app.patch("/jobApplicant/:id", async (req, res) => {
   const id = req.params.id;
   const filter = { _id: new ObjectId(id) };
-  const updatedNumber = req.body;
-  console.log("applicantInfo", updatedNumber);
+  const applicantsNumber = req.body;
+  console.log("applicantInfo", applicantsNumber);
 
   const updateDoc = {
     $inc: {
-      quantity: 1,
+      applicantsNumber: 1,
     },
   };
   const result = await jobsCollection.updateOne(filter, updateDoc);
   res.send(result);
+  console.log(result);
 });
 
 app.get("/jobByCategory/:category", async (req, res) => {
@@ -193,10 +198,8 @@ app.get("/jobByCategory/:category", async (req, res) => {
   res.send(result);
 });
 
-app.get("/jobByTitle/:jobTitle", async (req, res) => {
-  const jobTitle = req.params.jobTitle;
-  const query = { jobTitle: jobTitle };
-  const cursor = jobsCollection.find(query);
+app.get("/allJobs", async (req, res) => {
+  const cursor = jobsCollection.find();
   const result = await cursor.toArray();
   res.send(result);
 });
@@ -209,15 +212,12 @@ app.post("/jobApplies", async (req, res) => {
   res.send(result);
 });
 
-app.get("/jobAppliesByEmail/:category", async (req, res) => {
-  const category = req.params.category;
-  const query = { category: category };
-  const cursor = jobAppliesCollection.find(query);
-  const result = await cursor.toArray();
-  res.send(result);
-});
+app.get("/jobAppliesByEmail", logger, verrifyToken, async (req, res) => {
+  if (req.query?.email !== req.user?.email) {
+    res.status(403).send({ message: "forbidden access" });
+  }
 
-app.get("/jobAppliesByEmail", async (req, res) => {
+  //email
   let query = {};
   if (req.query?.email) {
     query = { email: req.query?.email };
@@ -230,6 +230,13 @@ app.get("/jobAppliesByEmail", async (req, res) => {
 app.get("/customerReviews", async (req, res) => {
   const cursor = reviewCollection.find();
   const result = await cursor.toArray();
+  res.send(result);
+});
+
+// userInfo apis route
+app.post("/userSubscribes", async (req, res) => {
+  const userInfoData = req.body;
+  const result = await usersInfoCollection.insertOne(userInfoData);
   res.send(result);
 });
 
