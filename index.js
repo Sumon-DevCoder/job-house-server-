@@ -11,6 +11,7 @@ const port = process.env.PORT || 5000;
 app.use(
   cors({
     origin: [
+      "http://localhost:5173",
       "https://job-house-94161.web.app",
       "https://job-house-94161.firebaseapp.com",
     ],
@@ -45,7 +46,6 @@ const verrifyToken = (req, res, next) => {
 
 //connect mongodb
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@job-house.p1cwnsp.mongodb.net/?retryWrites=true&w=majority`;
-
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -217,7 +217,6 @@ app.get("/jobAppliesByEmail", logger, verrifyToken, async (req, res) => {
     res.status(403).send({ message: "forbidden access" });
   }
 
-  //email
   let query = {};
   if (req.query?.email) {
     query = { email: req.query?.email };
